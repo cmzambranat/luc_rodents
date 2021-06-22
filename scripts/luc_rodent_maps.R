@@ -61,18 +61,24 @@ ssp1_2025 = raster(here('data/SSP1_2025.tif'), crs = crs_proj)
 percent <-  c(0,.01,.1,.5,.9,.99,1)
 var <- values(ssp1_2025)
 cI = round(quantile(var, percent, na.rm = T), 3)
+cI = round(boxbreaks(var, 2), 2)
+
+cI = round(classIntervals(var, style = 'quantile', n = 5, intervalClosure = "left")$brks, 2)
+
 
 # Palette 
-pal = (tmaptools::get_brewer_pal("YlGnBu", n = 9, contrast = 0.7, plot = F))
+pal = (tmaptools::get_brewer_pal("RdPu", n = 9, contrast = 0.7, plot = F))
 
-luc_rod_plot(ssp1_2025, cI, pal)
+pal = viridisLite::viridis(20, begin = 0.43, end = 1, direction = -1)
+
+luc_rod_plot(ssp1_2025)
 
 
 ssp1_2025_map =
   ggplot() +
   layer_spatial(ssp1_2025) +
   geom_sf(data = world, color = "black", fill = NA, size = 0.2) +
-  scale_fill_viridis(option = 'cividis', na.value = NA) +
+  scale_fill_viridis(option = 'magma', na.value = NA, direction = -1) +
   #scale_fill_gradientn(na.value = NA, colours = pal, 
    #                    values = rescale(cI),
     #                   limits=c(0, 6.972)) +
@@ -95,7 +101,7 @@ ssp1_2025_map =
            expand = FALSE)
 
 ssp1_2025_map
-ggsave(here('figures/ssp1_2050_ssp1_2025_perc.png'), ssp1_2050_ssp1_2025_map, 
+ggsave(here('figures/ssp1_2025.png'), ssp1_2025_map, 
        device = 'png', width = 2, height = 0.85, dpi = 300, scale = 5)
 
 
