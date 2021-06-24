@@ -1,14 +1,14 @@
-luc_rod_plot = function(luc_raster){
+luc_rod_plot = function(luc_raster, legend_yn = c(0.1, 0.35), pal = NULL, cI = NULL){
   ggplot2::ggplot() +
               layer_spatial(luc_raster) +
                 geom_sf(data = world, color = "black", fill = NA, size = 0.2) +
-                scale_fill_viridis(option = 'magma', na.value = NA, direction = -1) +
-                #scale_fill_gradientn(na.value = NA, colours = pal, 
-                #                     values = rescale(cI),
-                #                     limits=c(minValue(luc_raster), maxValue(luc_raster))) +
-                guides(fill = guide_colourbar(barwidth = 1, barheight = 8)) +
+                #scale_fill_viridis(option = 'magma', na.value = NA, direction = -1) +
+                scale_fill_gradientn(na.value = NA, colours = pal,
+                                     values = rescale(cI),
+                                     limits = c(minValue(luc_raster), maxValue(luc_raster))) +
+                # #guides(fill = guide_colourbar(barwidth = 1, barheight = 8)) +
                 theme_bw() + 
-                theme(legend.position = c(0.1, 0.35),
+                theme(legend.position = legend_yn,
                       axis.text.x = element_blank(), 
                       axis.text.y = element_blank(),
                       axis.ticks = element_blank(),
@@ -19,7 +19,7 @@ luc_rod_plot = function(luc_raster){
                       legend.title = element_blank(),
                       #legend.background = element_rect(fill="#def3f6"),
                       legend.key = element_rect(fill = "#def3f6"),
-                      legend.text = element_text(size = 12)) +
+                      legend.text = element_text(size = 10)) +
                 coord_sf(xlim = st_bbox(luc_raster)[c(1, 3)],
                          ylim = st_bbox(luc_raster)[c(2, 4)],
                          expand = FALSE)
