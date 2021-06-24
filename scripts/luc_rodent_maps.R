@@ -1,6 +1,5 @@
 library(here)
 library(ggplot2)
-library(terra)
 library(tmap)
 library(viridis)
 library(ggthemes)
@@ -11,6 +10,7 @@ library(classInt)
 library(scales)
 library(rnaturalearth)
 library(rnaturalearthdata)
+library(patchwork)
 
 # Define projection
 crs_proj = "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0" 
@@ -55,6 +55,9 @@ ggsave(here('figures/rodent_richness.png'), richness,
 # SSP1 2025 ---------------------------------------------------------------
 # Read raster
 ssp1_2025 = raster(here('data/SSP1_2025.tif'), crs = crs_proj)
+ssp1_2050 = raster(here('data/SSP1_2050.tif'), crs = crs_proj)
+ssp4_2050 = raster(here('data/SSP4_2050.tif'), crs = crs_proj)
+ssp5_2050 = raster(here('data/SSP5_2050.tif'), crs = crs_proj)
 
 # Percent mapping
 # Source: https://spatialanalysis.github.io/lab_tutorials/4_R_Mapping.html#extreme-value-maps
@@ -66,22 +69,49 @@ cI = round(boxbreaks(var, 2), 2)
 cI = round(classIntervals(var, style = 'quantile', n = 5, intervalClosure = "left")$brks, 2)
 
 
-# Palette 
-pal = (tmaptools::get_brewer_pal("RdPu", n = 9, contrast = 0.7, plot = F))
+# Palette: tmaptools::palette_explorer()
+pal = (tmaptools::get_brewer_pal("PuBuGn", n = 10, contrast = 1, plot = F))
+pal = viridisLite::magma(10, begin = 0, end = 1, direction = -1)
 
-pal = viridisLite::viridis(20, begin = 0.43, end = 1, direction = -1)
 
-luc_rod_plot(ssp1_2025)
+var_ssp1_2025 <- values(ssp1_2025)
+cI_ssp1_2025 = round(quantile(var_ssp1_2025, percent, na.rm = T), 3)
+ssp1_2025_map = luc_rod_plot(ssp1_2025, pal = pal, cI = cI_ssp1_2025)
+
+var_ssp1_2050 <- values(ssp1_2050)
+cI_ssp1_2050 = round(quantile(var_ssp1_2050, percent, na.rm = T), 3)
+ssp1_2050_map = luc_rod_plot(ssp1_2050, pal = pal, cI = cI_ssp1_2050)
+
+var_ssp4_2050 <- values(ssp4_2050)
+cI_ssp4_2050 = round(quantile(var_ssp4_2050, percent, na.rm = T), 3)
+ssp4_2050_map = luc_rod_plot(ssp4_2050, pal = pal, cI = cI_ssp4_2050)
+
+var_ssp5_2050 <- values(ssp5_2050)
+cI_ssp5_2050 = round(quantile(var_ssp5_2050, percent, na.rm = T), 3)
+ssp5_2050_map = luc_rod_plot(ssp5_2050, pal = pal, cI = cI_ssp5_2050)
+
+patchwork <- ssp1_2025_map + ssp1_2050_map + ssp4_2050_map + ssp5_2050_map
+
+a =patchwork + plot_annotation(tag_levels = 'A')  
+
+
+
++ plot_layout(guides = 'collect')
+
+
+
+ggsave(here('figures/fig_1_v2.png'), a, 
+       device = 'png', width = 2, height = 0.85, dpi = 300, scale = 5)
 
 
 ssp1_2025_map =
   ggplot() +
-  layer_spatial(ssp1_2025) +
+  layer_spatial(ssp5_2050) +
   geom_sf(data = world, color = "black", fill = NA, size = 0.2) +
-  scale_fill_viridis(option = 'magma', na.value = NA, direction = -1) +
-  #scale_fill_gradientn(na.value = NA, colours = pal, 
-   #                    values = rescale(cI),
-    #                   limits=c(0, 6.972)) +
+  scale_fill_viridis(option = 'magma', na.value = NA, direction = -1, breaks = cI_ssp5_2050, guide = 'legend') +
+  # scale_fill_gradientn(na.value = NA, colours = pal, 
+  #                     values = rescale(cI),
+  #                    limits=c(0, 6.972)) +
   guides(fill = guide_colourbar(barwidth = 1, barheight = 8)) +
   theme_bw() + 
   theme(legend.position = c(0.1, 0.35),
@@ -96,8 +126,8 @@ ssp1_2025_map =
         #legend.background = element_rect(fill="#def3f6"),
         legend.key = element_rect(fill = "#def3f6"),
         legend.text = element_text(size = 12)) +
-  coord_sf(xlim = st_bbox(ssp1_2050_ssp1_2025)[c(1, 3)],
-           ylim = st_bbox(ssp1_2050_ssp1_2025)[c(2, 4)],
+  coord_sf(xlim = st_bbox(ssp1_2025)[c(1, 3)],
+           ylim = st_bbox(ssp1_2025)[c(2, 4)],
            expand = FALSE)
 
 ssp1_2025_map
