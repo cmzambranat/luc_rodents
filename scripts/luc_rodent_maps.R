@@ -22,15 +22,16 @@ ssp1 = raster(here('data/SSP1_2050_SSP1_2025 .tif'))
 # Get world countries boundaries
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
-# Species richness map
 
+# Figure 1 ----------------------------------------------------------------
+# Map rodent species richness
 richness =      
 ggplot() +
   layer_spatial(rod_richness) +
   #coord_equal() +
   geom_sf(data = world, color = "black", fill = NA, size = 0.3) +
   scale_fill_viridis(option = 'turbo', na.value = NA) +
-  guides(fill = guide_colourbar(barwidth = 1, barheight = 8)) +
+  #guides(fill = guide_colourbar(barwidth = 1, barheight = 8)) +
   theme_bw() + 
   theme(legend.position = c(0.1, 0.35),
         axis.text.x = element_blank(), 
@@ -43,99 +44,58 @@ ggplot() +
         legend.title = element_blank(),
         #legend.background = element_rect(fill="#def3f6"),
         legend.key = element_rect(fill="#def3f6"),
-        legend.text=element_text(size = 17)) +
+        legend.text=element_text(size = 12)) +
   coord_sf(xlim = st_bbox(rod_richness)[c(1, 3)],
            ylim = st_bbox(rod_richness)[c(2, 4)],
            expand = FALSE)
 
-richness
-ggsave(here('figures/rodent_richness.png'), richness, 
-      device = 'png', width = 2, height = 0.85, dpi = 300, scale = 5)
-
-# SSP1 2025 ---------------------------------------------------------------
+# Hazard map SSP1 2025
 # Read raster
 ssp1_2025 = raster(here('data/SSP1_2025.tif'), crs = crs_proj)
-ssp1_2050 = raster(here('data/SSP1_2050.tif'), crs = crs_proj)
-ssp4_2050 = raster(here('data/SSP4_2050.tif'), crs = crs_proj)
-ssp5_2050 = raster(here('data/SSP5_2050.tif'), crs = crs_proj)
 
-# Percent mapping
+# Estimate % breaks (Percent mapping)
 # Source: https://spatialanalysis.github.io/lab_tutorials/4_R_Mapping.html#extreme-value-maps
 percent <-  c(0,.01,.1,.5,.9,.99,1)
-var <- values(ssp1_2025)
-cI = round(quantile(var, percent, na.rm = T), 3)
-cI = round(boxbreaks(var, 2), 2)
-
-cI = round(classIntervals(var, style = 'quantile', n = 5, intervalClosure = "left")$brks, 2)
-
-
-# Palette: tmaptools::palette_explorer()
-pal = (tmaptools::get_brewer_pal("PuBuGn", n = 10, contrast = 1, plot = F))
-pal = viridisLite::magma(10, begin = 0, end = 1, direction = -1)
-
-
 var_ssp1_2025 <- values(ssp1_2025)
 cI_ssp1_2025 = round(quantile(var_ssp1_2025, percent, na.rm = T), 3)
-ssp1_2025_map = luc_rod_plot(ssp1_2025, pal = pal, cI = cI_ssp1_2025)
 
-var_ssp1_2050 <- values(ssp1_2050)
-cI_ssp1_2050 = round(quantile(var_ssp1_2050, percent, na.rm = T), 3)
-ssp1_2050_map = luc_rod_plot(ssp1_2050, pal = pal, cI = cI_ssp1_2050)
-
-var_ssp4_2050 <- values(ssp4_2050)
-cI_ssp4_2050 = round(quantile(var_ssp4_2050, percent, na.rm = T), 3)
-ssp4_2050_map = luc_rod_plot(ssp4_2050, pal = pal, cI = cI_ssp4_2050)
-
-var_ssp5_2050 <- values(ssp5_2050)
-cI_ssp5_2050 = round(quantile(var_ssp5_2050, percent, na.rm = T), 3)
-ssp5_2050_map = luc_rod_plot(ssp5_2050, pal = pal, cI = cI_ssp5_2050)
-
-patchwork <- ssp1_2025_map + ssp1_2050_map + ssp4_2050_map + ssp5_2050_map
-
-a =patchwork + plot_annotation(tag_levels = 'A')  
-
-
-
-+ plot_layout(guides = 'collect')
-
-
-
-ggsave(here('figures/fig_1_v2.png'), a, 
-       device = 'png', width = 2, height = 0.85, dpi = 300, scale = 5)
-
+lab = c('< 1%', '1% - 10%', '10% - 50%', '50% - 90%', '90% - 99%', '> 99%', 'test')
 
 ssp1_2025_map =
   ggplot() +
-  layer_spatial(ssp5_2050) +
+  layer_spatial(ssp1_2025) +
   geom_sf(data = world, color = "black", fill = NA, size = 0.2) +
-  scale_fill_viridis(option = 'magma', na.value = NA, direction = -1, breaks = cI_ssp5_2050, guide = 'legend') +
-  # scale_fill_gradientn(na.value = NA, colours = pal, 
-  #                     values = rescale(cI),
-  #                    limits=c(0, 6.972)) +
-  guides(fill = guide_colourbar(barwidth = 1, barheight = 8)) +
+  scale_fill_viridis(option = 'inferno', 
+                     na.value = NA, 
+                     direction = -1, 
+                     breaks = cI_ssp1_2025, 
+                     guide = 'legend', 
+                     labels = lab) +
   theme_bw() + 
   theme(legend.position = c(0.1, 0.35),
         axis.text.x = element_blank(), 
         axis.text.y = element_blank(),
         axis.ticks = element_blank(),
-        #panel.background = element_rect(fill = 'white'),
         panel.grid.major = element_line(color = "black"),
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
         legend.title = element_blank(),
-        #legend.background = element_rect(fill="#def3f6"),
         legend.key = element_rect(fill = "#def3f6"),
         legend.text = element_text(size = 12)) +
   coord_sf(xlim = st_bbox(ssp1_2025)[c(1, 3)],
            ylim = st_bbox(ssp1_2025)[c(2, 4)],
            expand = FALSE)
 
-ssp1_2025_map
-ggsave(here('figures/ssp1_2025.png'), ssp1_2025_map, 
-       device = 'png', width = 2, height = 0.85, dpi = 300, scale = 5)
+# Save patchwork object
+fig_1 = (richness / ssp1_2025_map) + plot_annotation(tag_levels = 'A') 
 
+# Save on disk. Assumes a width of two columns or 12 cm when printed
+ggsave(here('figures/fig_1.pdf'), fig_1, 
+       device = 'pdf', width = 12, height = 10, dpi = 300, units = "cm", scale = 2)
 
-## SPP1 2050 - ssp1 2025
+# Figure 2 ----------------------------------------------------------------
+# Contrasting baseline (2025 SSP1) vs different future scenarios (2050 SSP1, SSP5, SSP4)
+## SPP1 2050 - SSP1 2025
 ssp1_2050_ssp1_2025 = raster(here('data/SSP1_2050_SSP1_2025.tif'), crs = crs_proj)
 
 # Percent mapping
@@ -161,15 +121,18 @@ pal = rev(tmaptools::get_brewer_pal("RdBu", n = 5, contrast = 0.7, plot = F))
 ssp1_2050_ssp1_2025_map =
   ggplot() +
   layer_spatial(ssp1_2050_ssp1_2025) +
-  #ggplot2::geom_raster(data = rod_ras, aes_string(x = "x", y = "y", fill = "richness")) +
-  #coord_equal() +
   geom_sf(data = world, color = "black", fill = NA, size = 0.2) +
-  scale_fill_gradientn(na.value = NA, colours = pal, 
-                       values = rescale(cI),
-                       limits=c(-2.33, 3.40)) +
+  scale_fill_viridis(option = 'inferno', 
+                     na.value = NA, 
+                     direction = -1, 
+                     breaks = cI, 
+                     guide = 'legend', 
+                     labels = lab) +
+  # scale_fill_gradientn(na.value = NA, colours = pal, 
+  #                      values = rescale(cI),
+  #                      limits=c(-2.33, 3.40)) +
   #scale_fill_manual(values = cI) +
   #scale_colour_brewer(type = 'div', palette = 'PRGn', na.value = NA, breaks = cI) +
-  guides(fill = guide_colourbar(barwidth = 1, barheight = 8)) +
   theme_bw() + 
   theme(legend.position = c(0.1, 0.35),
         axis.text.x = element_blank(), 
