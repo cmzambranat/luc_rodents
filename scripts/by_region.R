@@ -10,10 +10,8 @@ data_names =  c("X", "lat", "lon", "SSP1_2050", "SSP4_2050", "SSP5_2050", "cost_
 
 data_luc = as_tibble(read.csv(here('data/DATA_SHARED_SOCIOECONOMIC_PATHS.csv'), col.names = data_names)) %>%
   select(-X, -geom1, -geom2) %>%
-  mutate(group = countrycode(data_luc$ADMIN, origin = "country.name", destination = "ar5"),
-         avoid_ssp5 = 
+  mutate(group = countrycode(data_luc$ADMIN, origin = "country.name", destination = "region")
   )
-
 
 
 
