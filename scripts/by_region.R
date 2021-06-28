@@ -10,7 +10,9 @@ data_names =  c("X", "lat", "lon", "SSP1_2050", "SSP4_2050", "SSP5_2050", "cost_
 
 data_luc = as_tibble(read.csv(here('data/DATA_SHARED_SOCIOECONOMIC_PATHS.csv'), col.names = data_names)) %>%
   select(-X, -geom1, -geom2) %>%
-  mutate(group = countrycode(data_luc$ADMIN, origin = "country.name", destination = "region")
+  mutate(ssp1_2050_ssp4_2050 = SSP1_2050 - SSP4_2050,
+         ssp1_2050_ssp5_2050 = SSP1_2050 - SSP5_2050,
+         group = countrycode(data_luc$ADMIN, origin = "country.name", destination = "ar5")
   )
 
 
@@ -21,13 +23,25 @@ plot(luc_sf["SSP1_2050"])
 # continent: Continent as defined in the World Bank Development Indicators
 # region: 7 Regions as defined in the World Bank Development Indicators
 
-data_avoided = data_luc %>%
-  select(cost_SSP4, cost_SSP5, SSP1_2050, group) %>%
+data_luc %>%
+  select(SSP1_2050, SSP4_2050, SSP5_2050, group) %>%
   pivot_longer(!group, names_to = "scenario", values_to = "avoided_risk") %>%
-  drop_na()
-
-ggplot(data_avoided, aes(x = group, y = avoided_risk, fill = scenario)) + 
+  drop_na() %>%
+  ggplot(aes(x = group, y = avoided_risk, fill = scenario)) + 
   geom_boxplot()
+
+
+data_avoided = data_luc %>%
+  select(cost_SSP4, cost_SSP5, group) %>%
+  pivot_longer(!group, names_to = "scenario", values_to = "avoided_risk") %>%
+  drop_na() %>%
+  
+  
+test3 %>%
+  ggplot(aes(x = economy, y = weigthed_risk)) + 
+  geom_boxplot()
+
+
 
 
 data_risk = data_luc %>%
@@ -36,6 +50,9 @@ data_risk = data_luc %>%
   pivot_longer(!ADMIN, names_to = "scenario", values_to = "risk") %>%
   drop_na()
 
+
+ggplot(d, aes(x = grid1, y = grid2)) + geom_point() + coord_fixed(ratio = 1) + 
+  geom_abline(colour = "red") + theme_bw()
 
   
 
